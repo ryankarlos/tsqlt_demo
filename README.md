@@ -50,17 +50,6 @@ The tables in the database, which contain information about product details, cus
 through primary and foreign keys, as shown here
 
 <img src="screenshots/tsqlt/database-diagram-tool.png">
-Before you create a test case, you need to create a test class where the test case will be located. 
-In tSQLt, all tests are collected under a single class. A class is a schema. 
-A test class is a schema configured with an extended property that tells tSQLt that it is a test class.
-To create a new class, use the NewTestClass procedure. For example, 
-
-```sql
-EXEC tSQLt.NewTestClass 'testSalesLT';
-```
-
-This creates a new schema for our test cases, so we can organise and execute tests as a group.
-We can add one or more test cases to the test class, so let’s get started doing that.
 
 In tSQLt, a test case is a stored procedure that’s part of a test class and uses tSQLt elements to perform the testing. 
 We can develop and test stored procedures and functions in a database.
@@ -72,7 +61,7 @@ with the SalesLT schema.
 
 <img src="screenshots/tsqlt/sp_saleslt.png">
 
-Nowets start by looking at one of the test scripts,[test_company_address.sql].
+No we start by looking at one of the test scripts,[test_company_address.sql].
 
 We use the CREATE PROCEDURE statement to create a test case. The procedure name must start with the word “test” and be 
 created in an existing test class; otherwise, making the test case is much like creating any other procedure. 
@@ -120,16 +109,59 @@ EXEC  [SalesLT].GetCustomerOrderDetails @custid
 ```
 
 Finally, we use the tSQLt AssertEqualsTable stored procedure to compare the data in the `actual` and `expected` tables.
+**Note** the expected table has to passed in as first parameter to the procedure, if not using the keyword [7].
+
 
 ```SQL
   EXEC tSQLt.AssertEqualsTable expected, actual;
 ```
 
-Open the [stored_procedures.sql] script in SSMS console and execute it. We should see the new procedure 
+Open the [sp_func.sql] script in SSMS console and execute it. These create a couple of stored procedures and one function 
+We have a test for each of these procedures and function in [tsqlt] folder. 
 
-Run the test case using `EXEC tSQLt.Run testSalesLT`. When we run the test case, it should evaluate to true and return the following results:
+Before running the test script  [test_company_address.sql] , you need to create a test class
+where the test case will be located. In tSQLt, all tests are collected under a single class. A class is a schema. 
+A test class is a schema configured with an extended property that tells tSQLt that it is a test class.
+To create a new class, use the NewTestClass procedure. For example, 
+
+```sql
+EXEC tSQLt.NewTestClass 'testSalesLT';
+```
+
+This creates a new schema for our test cases, so we can organise and execute tests as a group.
+We need to create this test class nly once and before running all the scripts for creating our test procedures.
+We can add one or more test cases to the test class, which is the case in all the test scripts created in  [tsqlt] folder.
+
+Now we can run the [test_company_address.sql] script described above and create the test stored procedure. 
+Now we can run the test case using `EXEC tSQLt.Run testSalesLT`. When we run the test case, it should evaluate 
+to true and return the following results:
 
 <img src="screenshots/tsqlt/cust_orders_test_result.png">
+
+Now run each of the other test scripts, [test_company_address.sql] and [test_customer_orders.sql]. If we run
+`EXEC tSQLt.Run testSalesLT` after this, we should now see all the test cases run 
+
+<img src="screenshots/tsqlt/run_all_tests_in_same_class.png">
+
+### Debugging and test errors
+
+In case, we do make a mistake when creating our test, and the tables are not equal, tsqlt will throw an assertion 
+error . For example, in [test_freights_per_customer.sql], lets assume we created an expected table as below, with the first row 
+dropped and the second row modified with different values. 
+
+```SQL
+INSERT INTO expected (customerid, totalfreight)
+VALUES
+        (28857 ,1096),
+        (29546 ,2220),
+        (30050 ,2457),
+        (29736, 2714)
+```
+We will see the error below when running `EXEC tSQLt.Run testSalesLT`. The operators, '=' tells us 
+that the rows are equal in both tables. The '<' operator highlights different row `(28857 ,1096)` 
+in the  `expected` table and the '>' indicates two different rows in the actual table.
+
+<img src="screenshots/tsqlt/test_assertion_error.png">
 
 ### Faking Tables
 
@@ -156,8 +188,14 @@ violation error.
 Otherwise inserting rows on faked tables will throw an error  ``Object ' ' cannot be renamed because the object participates 
 in enforced dependencies.``. 
 
-Now run the [views.sql] script in SSMS to create a view of the products description and pricing. Then run the test tsqlt script 
-[test_vw_products.sql] for testing the view. The first part of the script, executes the `FakeTable` tsqlt stored procedure
+Now run the [views.sql] script in SSMS to create a view of the products description and pricing. Check that the view 
+is created and query it
+
+
+<img src="screenshots/tsqlt/create_view.png">
+
+
+Then run the test tsqlt script[test_vw_products.sql] for testing the view. The first part of the script, executes the `FakeTable` tsqlt stored procedure
 on each of the source tables the view depends on. 
 
 ```SQL
@@ -186,6 +224,8 @@ SELECT * FROM [SalesLT].[vw_Products]
 
 We can then use  the `tSQLt.AssertEqualsTable` as used previously, to compare the expected and actual table.
 
+<img src="screenshots/tsqlt/view_successful_run.png">
+
 
 ###  Setup and teardown procedure
 
@@ -202,3 +242,4 @@ run `EXEC tSQLt.RunAll`, which will run our entire test suite.
 4. SSMS Database Diagram Tool https://www.mssqltips.com/sqlservertip/6269/sql-server-database-diagram-tool-in-management-studio/
 5. Tutorial on SQL Server Unit Testing https://www.sqlshack.com/sql-unit-testing-with-the-tsqlt-framework-for-beginners/
 6. Blog on SQL Server 2019 setup on Windows https://www.mssqltips.com/sqlservertip/6608/install-sql-server-2019-standard-edition/
+7. AssertEqualsTable syntax https://tsqlt.org/user-guide/assertions/assertequalstable/
