@@ -138,6 +138,54 @@ the table referenced within the actual stored procedure  we are testing. This wi
 actual database and the table is not updated or deleted. Any subsequent references we make in our test case to that 
 table will always point to the test table and not the actual  table in the database. Then we populate the table with 
 test data.
+We may want to use fake table to avoid any dependency of on the result of the stored procedure we are testing for example.
+This will allow us to test the behavior of the stored procedure in isolation from any external factors. 
+If we require to isolate SQL unit test from tables, Faketable will be a good choice so that SQL unit test will 
+be more robust.
+
+As an example, the logic in the [views.sql] script creates a view of the products description and pricing from 
+four tables  'Product', 'ProductModelProductDescription','ProductModel' and ProductDescription'. We want to 
+only test the logic that the resulting view contains the data we expect, which can be achieved by inserting our 
+own dummy data into each of the tables. The source tables may contain a lot of data, which would make it difficult to 
+test. In addition, if one of the tables has a foreign key constraint, we cannot insert any individual row to table, 
+unless a related row is inserted into the referenced table as well. If we try doing this we get a foreign key constraint 
+violation error.
+
+**Note** Before running the scripts, we will also need to drop the views that come loaded with AdventureWorks e.g. 
+`SalesLT.vProductAndDescription``SalesLT.vProductModelCatalogDescription`. This can be done from the object explorer in SSMS or via sql command `DROP VIEW`.
+Otherwise inserting rows on faked tables will throw an error  ``Object ' ' cannot be renamed because the object participates 
+in enforced dependencies.``. 
+
+Now run the [views.sql] script in SSMS to create a view of the products description and pricing. Then run the test tsqlt script 
+[test_vw_products.sql] for testing the view. The first part of the script, executes the `FakeTable` tsqlt stored procedure
+on each of the source tables the view depends on. 
+
+```SQL
+EXEC tSQLt.FakeTable @TableName = '[SalesLT].Product';
+EXEC tSQLt.FakeTable @TableName = '[SalesLT].ProductModelProductDescription'
+EXEC tSQLt.FakeTable @TableName = '[SalesLT].ProductModel'
+EXEC tSQLt.FakeTable @TableName = '[SalesLT].ProductDescription'
+```
+
+
+We can then insert data into each of the tables and the create an expected view with data. The view should be updated 
+automatically and we can just insert the data from the view into the actual temporary table.
+
+```SQL
+ CREATE TABLE actual (
+       Name NVARCHAR(200) NOT NULL,
+       Color NVARCHAR(20),
+       ListPrice NUMERIC(6, 2),
+       StandardCost NUMERIC(6,2),
+       Description NVARCHAR(200),
+       );
+
+INSERT INTO actual
+SELECT * FROM [SalesLT].[vw_Products]
+```
+
+We can then use  the `tSQLt.AssertEqualsTable` as used previously, to compare the expected and actual table.
+
 
 ###  Setup and teardown procedure
 
