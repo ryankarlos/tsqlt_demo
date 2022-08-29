@@ -1,7 +1,7 @@
 USE [AdventureWorksLT2019]
 GO
 
-CREATE OR ALTER PROCEDURE [SalesLT].GetCustomerOrderDetails (@customerid SMALLINT, @quantity SMALLINT = 10)
+CREATE OR ALTER PROCEDURE [SalesLT].GetCustomerOrderDetails (@customerid SMALLINT, @minitems SMALLINT = 10)
 AS
 BEGIN
 	SELECT OrderQty,Name,ListPrice
@@ -10,11 +10,10 @@ BEGIN
 							JOIN [SalesLT].Product
 			  ON SalesOrderDetail.ProductID=Product.ProductID
 	WHERE CustomerID=@customerid
-	AND OrderQty > @quantity
+	AND OrderQty > @minitems
 	ORDER BY ListPrice DESC
 END;
 GO
-
 
 CREATE  OR ALTER PROCEDURE [SalesLT].[GetCompanyAddress] (@company NVARCHAR(100))
 AS
@@ -25,5 +24,18 @@ BEGIN
 					  JOIN [SalesLT].Address
 		ON (CustomerAddress.AddressID=Address.AddressID)
 	 WHERE CompanyName=@company
+END;
+GO
+
+CREATE OR ALTER FUNCTION [SalesLT].GetLargestFreightsbyCustomer (@orderyear AS INT)
+RETURNS @freight table (customerid SMALLINT, totalfreight INT)
+BEGIN
+    INSERT INTO @freight
+    SELECT TOP 5 customerid, SUM(freight) AS totalfreight
+    FROM SalesLT.SalesOrderHeader
+    WHERE YEAR(orderdate) = @orderyear
+    GROUP BY customerid
+    ORDER BY totalfreight DESC;
+    RETURN;
 END;
 GO

@@ -21,9 +21,11 @@ Microsoft SQL server 2019.(`C:\Program Files\Microsoft SQL Server\MSSQL15.MSSQLS
 -> Restore Database and add path to .bak file as in screenshot below. Click OK to restore the database.
 Refresh the Database and you should see the `AdventureWorksLT2019` database in the object explorer.
 
+
 <img src="screenshots/tsqlt/restore_db.png">
 
 Then check to see you have all the tables in the database and run a select query on one of them.
+
 
 <img src="screenshots/tsqlt/preparesql.png">
 
@@ -31,7 +33,9 @@ Now download [tSQLt](https://tsqlt.org/downloads/).Unzip the file to a location 
 and execute the PrepareServer.sql file in SSMS. This will enable  CLR and installs a server certificate that allows the 
 installation of the tSQLt CLR as described in the [docs](https://tsqlt.org/user-guide/quick-start/)
 
+
 <img src="screenshots/tsqlt/preparesql.png">
+
 
 Next we will need to install tsql to our development database (AdventureWorks), by executing the tSQLt.class.sql script 
 (included in the zip file) as described in the [docs](https://tsqlt.org/user-guide/quick-start/#InstallToDevDb).
@@ -68,7 +72,7 @@ with the SalesLT schema.
 
 <img src="screenshots/tsqlt/sp_saleslt.png">
 
-Nowets start by looking at one of the test scripts, [test_company_address.sql].
+Nowets start by looking at one of the test scripts,[test_company_address.sql].
 
 We use the CREATE PROCEDURE statement to create a test case. The procedure name must start with the word “test” and be 
 created in an existing test class; otherwise, making the test case is much like creating any other procedure. 
@@ -81,36 +85,38 @@ We will first create a temporary tables, `expected`, to store the expected data.
 procedure to return when it is executed.
 
 ```SQL
-	CREATE TABLE expected (
-    OrderQty SMALLINT,    Name NVARCHAR(200),
-    ListPrice NUMERIC(6, 2)
-	);
 
-	INSERT INTO expected (OrderQty, Name, ListPrice)
-	VALUES
-            (23,'Classic Vest, S', 63.50),
-            (11 ,  'Water Bottle - 30 oz.',4.99 ),
-            (12 ,  'Sport-100 Helmet, Black', 34.99 ),
-            (15 , 'Short-Sleeve Classic Jersey, XL', 53.99),
-            (16 , 'Short-Sleeve Classic Jersey, L', 53.99),
-            (17 , 'Bike Wash - Dissolver' ,7.95 )
+CREATE TABLE expected (
+OrderQty SMALLINT,    Name NVARCHAR(200),
+ListPrice NUMERIC(6, 2)
+);
+
+INSERT INTO expected (OrderQty, Name, ListPrice)
+VALUES
+        (23,'Classic Vest, S', 63.50),
+        (11 ,  'Water Bottle - 30 oz.',4.99 ),
+        (12 ,  'Sport-100 Helmet, Black', 34.99 ),
+        (15 , 'Short-Sleeve Classic Jersey, XL', 53.99),
+        (16 , 'Short-Sleeve Classic Jersey, L', 53.99),
+        (17 , 'Bike Wash - Dissolver' ,7.95 )
 ```
 
 Now create a temporary table `actual`, which will store data once the stored procedure is successfully run. Both temp 
 tables schema are the same. We will execute the stored procedure for customer id `29796`
 
 ```SQL
-	CREATE TABLE actual (
-    OrderQty SMALLINT,
-    Name NVARCHAR(200),
-    ListPrice NUMERIC(6, 2)
-	);
 
-    DECLARE @custid SMALLINT;
-    SET @custid = 29796
+CREATE TABLE actual (
+OrderQty SMALLINT,
+Name NVARCHAR(200),
+ListPrice NUMERIC(6, 2)
+);
 
-    INSERT INTO actual
-    EXEC  [SalesLT].GetCustomerOrderDetails @custid
+DECLARE @custid SMALLINT;
+SET @custid = 29796
+
+INSERT INTO actual
+EXEC  [SalesLT].GetCustomerOrderDetails @custid
 ```
 
 Finally, we use the tSQLt AssertEqualsTable stored procedure to compare the data in the `actual` and `expected` tables.
@@ -134,8 +140,6 @@ table will always point to the test table and not the actual  table in the datab
 test data.
 
 ###  Setup and teardown procedure
-
-
 
 In all the examples, we have used a single test class `testSalesLT` and executed all the tests in the class by 
 passing the class name as a parameter to `tSQLt.Run` procedure .e.g `EXEC tSQLt.Run testSalesLT`. However, if we did 
