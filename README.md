@@ -21,41 +21,40 @@ Microsoft SQL server 2019.(`C:\Program Files\Microsoft SQL Server\MSSQL15.MSSQLS
 -> Restore Database and add path to .bak file as in screenshot below. Click OK to restore the database.
 Refresh the Database and you should see the `AdventureWorksLT2019` database in the object explorer.
 
-</br>
 <img src="screenshots/tsqlt/restore_db.png">
-</br>
+
 
 Then check to see you have all the tables in the database and run a select query on one of them.
 
-</br>
+
 <img src="screenshots/tsqlt/preparesql.png">
-</br>
+
 
 Now download [tSQLt](https://tsqlt.org/downloads/).Unzip the file to a location on your hard drive.
 and execute the PrepareServer.sql file in SSMS. This will enable  CLR and installs a server certificate that allows the 
 installation of the tSQLt CLR as described in the [docs](https://tsqlt.org/user-guide/quick-start/)
 
-</br>
+
 <img src="screenshots/tsqlt/preparesql.png">
-</br>
+
 
 Next we will need to install tsql to our development database (AdventureWorks), by executing the tSQLt.class.sql script 
 (included in the zip file) as described in the [docs](https://tsqlt.org/user-guide/quick-start/#InstallToDevDb).
 You should see a bunch of tables (tables folder), views(views folder) and stored procedures (under Programmability -> Stored Procedures)
 with tSQLt schema. We will be using some of these stored procedures for testing.
 
-</br>
+
 <img src="screenshots/tsqlt/install_tsqlt.png">
-</br>
+
 
 The diagram below was generated using SQL Server Database Diagram Tool in SSMS. For more 
 instructions on how to do this, check out this [article](https://www.mssqltips.com/sqlservertip/6269/sql-server-database-diagram-tool-in-management-studio/)
 The tables in the database, which contain information about product details, customers, and sales orders, are related 
 through primary and foreign keys, as shown here
 
-</br>
+
 <img src="screenshots/tsqlt/database-diagram-tool.png">
-</br>
+
 
 In tSQLt, a test case is a stored procedure that’s part of a test class and uses tSQLt elements to perform the testing. 
 We can develop and test stored procedures and functions in a database.
@@ -65,9 +64,9 @@ We have a number of stored procedures in [stored_procedures.sql] and the associa
 Open the [stored_procedures.sql] script in SSMS console and execute it. We should see all the procedures created in the object explorer 
 with the SalesLT schema.
 
-</br>
+
 <img src="screenshots/tsqlt/sp_saleslt.png">
-</br>
+
 
 No we start by looking at one of the test scripts,[test_company_address.sql].
 
@@ -144,16 +143,16 @@ Now we can run the [test_company_address.sql](https://github.com/ryankarlos/tsql
 Now we can run the test case using `EXEC tSQLt.Run testSalesLT`. When we run the test case, it should evaluate 
 to true and return the following results:
 
-</br>
+
 <img src="screenshots/tsqlt/cust_orders_test_result.png">
-</br>
+
 
 Now run each of the other test scripts, [test_company_address.sql](https://github.com/ryankarlos/tsqlt_demo/blob/master/sql/tsqlt/test_company_address.sql) and [test_customer_orders.sql](https://github.com/ryankarlos/tsqlt_demo/blob/master/sql/tsqlt/test_customer_orders.sql). If we run
 `EXEC tSQLt.Run testSalesLT` after this, we should now see all the test cases run 
 
-</br>
+
 <img src="screenshots/tsqlt/run_all_tests_in_same_class.png">
-</br>
+
 
 ### Debugging and test errors
 
@@ -173,7 +172,7 @@ We will see the error below when running `EXEC tSQLt.Run testSalesLT`. The opera
 that the rows are equal in both tables. The '<' operator highlights different row `(28857 ,1096)` 
 in the  `expected` table and the '>' indicates two different rows in the actual table.
 
-</br>
+
 <img src="screenshots/tsqlt/test_assertion_error.png">
 
 ### Faking Tables
@@ -204,9 +203,9 @@ in enforced dependencies.``.
 Now run the [views.sql] script in SSMS to create a view of the products description and pricing. Check that the view 
 is created and query it
 
-</br>
+
 <img src="screenshots/tsqlt/create_view.png">
-</br>
+
 
 Then run the test tsqlt script[test_vw_products.sql] for testing the view. The first part of the script, executes the `FakeTable` tsqlt stored procedure
 on each of the source tables the view depends on. 
@@ -217,7 +216,6 @@ EXEC tSQLt.FakeTable @TableName = '[SalesLT].ProductModelProductDescription'
 EXEC tSQLt.FakeTable @TableName = '[SalesLT].ProductModel'
 EXEC tSQLt.FakeTable @TableName = '[SalesLT].ProductDescription'
 ```
-
 
 We can then insert data into each of the tables and the create an expected view with data. The view should be updated 
 automatically and we can just insert the data from the view into the actual temporary table.
@@ -237,9 +235,8 @@ SELECT * FROM [SalesLT].[vw_Products]
 
 We can then use  the `tSQLt.AssertEqualsTable` as used previously, to compare the expected and actual table.
 
-</br>
+
 <img src="screenshots/tsqlt/view_successful_run.png">
-</br>
 
 ### Setup Procedure 
 
@@ -357,18 +354,18 @@ The second test case `testEmailSPNotCalled` checks if the mocked procedure `Sale
 when the items are within the max expiry(which is overridden to 4 years).
 If it is called, we will force the test to fail with a sensible message.
 
-</br>
+
 <img src="screenshots/tsqlt/execution_spy_procedure_test_cases.png">
-</br>
+
 
 In the above examples, if we did not have the spy procedure i.e. did not include 
 ` EXEC tSQLt.SpyProcedure 'SalesLT.SendMail` in any of our test cases, we would get the 
 following error as we have not actually configured a profile for `joe bloggs`for sending an email to 
 using the system stored procedure `sp_send_dbmail`.
 
-</br>
+
 <img src="screenshots/tsqlt/errorwithspyprocedure.png">
-</br>
+
 
 ## Conclusion
 
