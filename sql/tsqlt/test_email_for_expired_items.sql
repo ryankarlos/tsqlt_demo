@@ -53,6 +53,11 @@ BEGIN
     EXEC [SalesLT].SendEmailIfItemStillBeingAdvertised
     EXEC tSQLt.AssertEqualsTable expected, actual;
 
+    --- Check SalesLT.SendMail called once
+    DECLARE @callcount TINYINT
+    SET @callcount = (SELECT COUNT(*) FROM SalesLT.SendMail_SpyProcedureLog)
+
+    EXEC tSQLt.AssertEquals 1, @callcount
 
 END;
 GO

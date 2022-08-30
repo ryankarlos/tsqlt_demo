@@ -227,24 +227,137 @@ We can then use  the `tSQLt.AssertEqualsTable` as used previously, to compare th
 <img src="screenshots/tsqlt/view_successful_run.png">
 
 
+### Setup Procedure 
+
+A Setup procedure can be called before executing each test case by creating a procedure `[SalesLT].[Setup]`.
+In [test_email_for_expired_items.sql], we have defined a setup procedure which will create a fake product table and
+insert data to be used by all the tests in the class. We have defined a new test class `testExpiredProducts` 
+for this setup procedure as we only want it to execute for a specific group of tests and not the entire test suite.
+tsqlt will always check if a stored procedure named SetUp on the test class is defined and if so, it is executed before the test 
+case stored procedure is executed.
+
+```sql
+
+EXEC tSQLt.NewTestClass 'testExpiredProducts'
+GO
+
+CREATE OR ALTER PROCEDURE testExpiredProducts.[SetUp]
+AS
+BEGIN
+    EXEC tSQLt.FakeTable @TableName = '[SalesLT].Product';
+        INSERT INTO [SalesLT].Product
+    (ProductID, Name, ProductNumber, Color, StandardCost, ListPrice, Size, Weight, ProductCategoryID, ProductModelID, SellStartDate, SellEndDate, DiscontinuedDate, ThumbNailPhoto, ThumbnailPhotoFileName, rowguid, ModifiedDate)
+    VALUES
+            (1, 'Road Frame black', 'FR-H', 'black', 1000.2, 1400.3, '60', 1000.2, 18, 6 ,'2009-06-01',NULL,NULL,CAST(123456 AS BINARY(2)),'EEE','43DD68D6-14A4-461F-9069-55309D90EA7E','2008-06-01'),
+            (2, 'Road Frame red', 'HJ-U', 'red', 1000.2, 1400.3, '58', 1200.2, 18, 6 ,'2009-06-01',NULL,NULL,CAST(123456 AS BINARY(2)),'EEE','43DD68D6-14A4-461F-9069-55309D90EA7E','2008-06-01'),
+            (3, 'sport helmet', 'LJ-8', 'red', 100.2, 140.3, 'M', 200.2, 35, 5 ,'2006-06-01',NULL,NULL,CAST(123456 AS BINARY(2)),'EEE','2E1EF41A-C08A-4FF6-8ADA-BDE58B64A712','2008-06-01'),
+            (4, 'sport helmet', 'DF-1', 'black', 100.2, 140.3, 'L', 300.2, 35, 5 ,'2006-06-01',NULL,NULL,CAST(123456 AS BINARY(2)),'EEE','A25A44FB-C2DE-4268-958F-110B8D7621E2','2008-06-01'),
+            (5, 'sport helmet', 'JH1', 'blue', 100.2, 100.3, '56', 260.2, 35, 5 ,'2009-06-01',NULL,NULL,CAST(123456 AS BINARY(2)),'EEE','18F95F47-1540-4E02-8F1F-CC1BCB6828D0','2008-06-01')
+END;
+GO
+
+```
+
+In the next section we will look at spy procedures using the test cases defined in [test_email_for_expired_items.sql]
+
 ###  Spy procedure
 
-A Setup procedure can be called before executing each tets case by creating a procedure `[SalesLT].[Setup]`.
+Lets assume we want to send an email alert to a user based on an event in our procedure .e.g if there are items 
+which should have been removed from the database after an expiry date. The very first step is to unblock the Stored 
+Procedure sp_send_dbmail used for sending emails using SQL Server otherwise when you execute the Stored 
+Procedure you will get an error.
 
+```SQL
+SP_CONFIGURE 'show advanced options', 1
+RECONFIGURE WITH OVERRIDE
+GO
 
-Lets assume we want to send an email alert after to the user based on an event in our procedure .e.g it computes that 
-an item is still showing up as on sale if it is supposed to be discontinued (after a certain period of time).
+SP_CONFIGURE 'Database Mail XPs', 1
+RECONFIGURE WITH OVERRIDE
+GO
 
+SP_CONFIGURE 'show advanced options', 0
+RECONFIGURE WITH OVERRIDE
+GO
 
-The very first step is to unblock the Stored Procedure sp_send_dbmail used for sending emails using SQL Server 
-otherwise when you execute the Stored Procedure you will get an error:
+```
 
+The script [send_email_for_old_items_advertised.sql] contains three stored procedures. `[SalesLT].ComputeCurrentYear`
+calculates the current year from the current datetime. `[SalesLT].SendEmailIfItemStillBeingAdvertised` calls this procedure to
+return the current year. It then uses this to check the time since the items in products table were on sale and if they 
+are older than the expiry date @MaxExpiry parameter which defaults to 3. If this is true, then it will select the items
+in the table and also call the `[SalesLT].[SendMail]` procedure which calls the  `sp_send_dbmail` system stored procedure
+to send an email to 'Joe Bloggs' with a subject and body. 
 
-Now lets assume we have a person Joe Bloggs higher up in management in the company who the email needs to be sent to.
-We do not want to be pinging him everytime we test this procedure the 
+```
+CREATE OR ALTER PROCEDURE [SalesLT].SendEmailIfItemStillBeingAdvertised (@MaxExpiry INTEGER =3)
+AS
+BEGIN
+    DECLARE @year NVARCHAR(4);
+    EXEC [SalesLT].ComputeCurrentYear @currentyear = @year OUTPUT;
 
+    IF (SELECT COUNT(*)
+            FROM [SalesLT].Product
+            WHERE (@year - YEAR(SellStartDate)) > @MaxExpiry
+            ) > 0
+        BEGIN
+            SELECT ProductID,  Name,  ProductNumber
+            FROM [SalesLT].Product
+            WHERE (@year - YEAR(SellStartDate)) > @MaxExpiry;
+            EXEC [SalesLT].[SendMail];
+        END
+    ELSE
+        PRINT 'All items within expiry period'
+END;
+GO
+```
 
-In all the examples, we have used a single test class `testSalesLT` and executed all the tests in the class by 
+The first test case `testEtestSendEmailIfItemStillBeingAdvertised` checks the output and `testEmailSPNotCalled` will 
+test check the
+
+We will mock the `[SalesLT].[SendMail]` procedure as we do not want to call the Database Mail and we should eliminate the 
+dependency of the database mail configuration, when writing tests. It may be the case, that in a development environment,
+the mail is not configured and even if it was, we do not want to be pinging `Joe Bloggs` everytime our test executes.
+We also mock `SalesLT.ComputeCurrentYear` and instead return a mocked output year.
+
+```SQL
+    EXEC tSQLt.SpyProcedure 'SalesLT.SendMail';
+    EXEC tSQLt.SpyProcedure 'SalesLT.ComputeCurrentYear','SET @currentyear  = CAST(2011 AS NVARCHAR(4))';
+```
+
+We can execute the `[SalesLT].SendEmailIfItemStillBeingAdvertised` and based on the data in the faked product table setup,
+it should return two items which are older than the default expiry date of 3 years.
+
+We can also check that the SalesLT.SendMail was called once. When a mock stored procedure is called, it creates a 
+special table and stores the called parameters into this table. The table name is created by adding “_SpyProcedureLog” 
+to the end of the mocked stored procedure (`SalesLT.SendMail_SpyProcedureLog`). 
+
+```SQL
+    DECLARE @callcount TINYINT
+    SET @callcount = (SELECT COUNT(*) FROM SalesLT.SendMail_SpyProcedureLog)
+
+    EXEC tSQLt.AssertEquals 1, @callcount
+```
+
+The second test case `testEmailSPNotCalled` checks if the mocked procedure `SalesLT.SendMail` is not called
+when the items are within the max expiry(which is overridden to 4 years).
+If it is called, we will force the test to fail with a sensible message.
+
+<img src="screenshots/tsqlt/execution_spy_procedure_test_cases.png">
+
+In the above examples, if we did not have the spy procedure i.e. did not include 
+` EXEC tSQLt.SpyProcedure 'SalesLT.SendMail` in any of our test cases, we would get the 
+following error as we have not actually configured a profile for `joe bloggs`for sending an email to 
+using the system stored procedure `sp_send_dbmail`.
+<img src="screenshots/tsqlt/errorwithspyprocedure.png">
+
+## Conclusion
+
+There are many more functionalities of tsqlt which are out of the scope of this demo e.g. expecting exceptions, [applying
+constraints](https://tsqlt.org/user-guide/isolating-dependencies/applyconstraint/) to fake tables, [applying triggers](https://tsqlt.org/user-guide/isolating-dependencies/applytrigger/).
+There also seems to be a very old article on Faking Views, which I have not tested out and have been struggling to 
+find a workaround for [8].
+Finally, in all the examples above , we have used a single test class `testSalesLT` and executed all the tests in the class by 
 passing the class name as a parameter to `tSQLt.Run` procedure .e.g `EXEC tSQLt.Run testSalesLT`. However, if we did 
 use multiple test classes and wanted to execute all the tests from different classes at once, we can also 
 run `EXEC tSQLt.RunAll`, which will run our entire test suite.
@@ -258,3 +371,4 @@ run `EXEC tSQLt.RunAll`, which will run our entire test suite.
 5. Tutorial on SQL Server Unit Testing https://www.sqlshack.com/sql-unit-testing-with-the-tsqlt-framework-for-beginners/
 6. Blog on SQL Server 2019 setup on Windows https://www.mssqltips.com/sqlservertip/6608/install-sql-server-2019-standard-edition/
 7. AssertEqualsTable syntax https://tsqlt.org/user-guide/assertions/assertequalstable/
+8. Faking views https://sqlity.net/en/70/faking-views/
