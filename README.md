@@ -5,6 +5,8 @@ examples is accessible from this [github repository](https://github.com/ryankarl
 First we will restore the Adventure Works sample database. This database is based on  Adventure Works Cycles, the fictitious multinational manufacturing company created by Microsoft in 2010 [2]. 
 The company manufactures and sells metal and composite bicycles to North American, European and Asian commercial markets. 
 
+## Installation and Setup 
+
 You can download the database backups  [here](https://docs.microsoft.com/en-us/sql/samples/adventureworks-install-configure?view=sql-server-ver16&tabs=ssms) or
 from the [db_backup](https://github.com/ryankarlos/tsqlt_demo/tree/master/db_backup) folder in the repository.
 In this demo, we will use the 'AdventureWorksLT2019.bak' file corresponding to the lightweight and pared down version of the OLTP sample.
@@ -67,6 +69,8 @@ with the SalesLT schema.
 
 <img src="screenshots/tsqlt/sp_saleslt.png">
 
+
+## Testing 
 
 No we start by looking at one of the test scripts,[test_company_address.sql].
 
