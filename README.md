@@ -84,7 +84,7 @@ is the main body of the procedure definition, between BEGIN and END.
 We will first create a temporary tables, `expected`, to store the expected data. We will insert rows we expect the 
 procedure to return when it is executed.
 
-```SQL
+```sql
 
 CREATE TABLE expected (
 OrderQty SMALLINT,    Name NVARCHAR(200),
@@ -104,7 +104,7 @@ VALUES
 Now create a temporary table `actual`, which will store data once the stored procedure is successfully run. Both temp 
 tables schema are the same. We will execute the stored procedure for customer id `29796`
 
-```SQL
+```sql
 
 CREATE TABLE actual (
 OrderQty SMALLINT,
@@ -123,7 +123,7 @@ Finally, we use the tSQLt AssertEqualsTable stored procedure to compare the data
 **Note** the expected table has to passed in as first parameter to the procedure, if not using the keyword [7].
 
 
-```SQL
+```sql
   EXEC tSQLt.AssertEqualsTable expected, actual;
 ```
 
@@ -164,7 +164,7 @@ In case, we do make a mistake when creating our test, and the tables are not equ
 error . For example, in [test_freights_per_customer.sql](https://github.com/ryankarlos/tsqlt_demo/blob/master/sql/tsqlt/test_freights_per_customer.sql), lets assume we created an expected table as below, with the first row 
 dropped and the second row modified with different values. 
 
-```SQL
+```sql
 INSERT INTO expected (customerid, totalfreight)
 VALUES
         (28857 ,1096),
@@ -214,7 +214,7 @@ is created and query it
 Then run the test tsqlt script[test_vw_products.sql] for testing the view. The first part of the script, executes the `FakeTable` tsqlt stored procedure
 on each of the source tables the view depends on. 
 
-```SQL
+```sql
 EXEC tSQLt.FakeTable @TableName = '[SalesLT].Product';
 EXEC tSQLt.FakeTable @TableName = '[SalesLT].ProductModelProductDescription'
 EXEC tSQLt.FakeTable @TableName = '[SalesLT].ProductModel'
@@ -224,7 +224,7 @@ EXEC tSQLt.FakeTable @TableName = '[SalesLT].ProductDescription'
 We can then insert data into each of the tables and the create an expected view with data. The view should be updated 
 automatically and we can just insert the data from the view into the actual temporary table.
 
-```SQL
+```sql
  CREATE TABLE actual (
        Name NVARCHAR(200) NOT NULL,
        Color NVARCHAR(20),
@@ -282,7 +282,7 @@ which should have been removed from the database after an expiry date. The very 
 Procedure sp_send_dbmail used for sending emails using SQL Server otherwise when you execute the Stored 
 Procedure you will get an error.
 
-```SQL
+```sql
 SP_CONFIGURE 'show advanced options', 1
 RECONFIGURE WITH OVERRIDE
 GO
@@ -304,7 +304,7 @@ are older than the expiry date @MaxExpiry parameter which defaults to 3. If this
 in the table and also call the `[SalesLT].[SendMail]` procedure which calls the  `sp_send_dbmail` system stored procedure
 to send an email to 'Joe Bloggs' with a subject and body. 
 
-```
+```sql
 CREATE OR ALTER PROCEDURE [SalesLT].SendEmailIfItemStillBeingAdvertised (@MaxExpiry INTEGER =3)
 AS
 BEGIN
@@ -335,7 +335,7 @@ dependency of the database mail configuration, when writing tests. It may be the
 the mail is not configured and even if it was, we do not want to be pinging `Joe Bloggs` everytime our test executes.
 We also mock `SalesLT.ComputeCurrentYear` and instead return a mocked output year.
 
-```SQL
+```sql
     EXEC tSQLt.SpyProcedure 'SalesLT.SendMail';
     EXEC tSQLt.SpyProcedure 'SalesLT.ComputeCurrentYear','SET @currentyear  = CAST(2011 AS NVARCHAR(4))';
 ```
@@ -347,7 +347,7 @@ We can also check that the SalesLT.SendMail was called once. When a mock stored 
 special table and stores the called parameters into this table. The table name is created by adding “_SpyProcedureLog” 
 to the end of the mocked stored procedure (`SalesLT.SendMail_SpyProcedureLog`). 
 
-```SQL
+```sql
     DECLARE @callcount TINYINT
     SET @callcount = (SELECT COUNT(*) FROM SalesLT.SendMail_SpyProcedureLog)
 
