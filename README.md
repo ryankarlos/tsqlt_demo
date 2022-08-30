@@ -1,12 +1,12 @@
 
 This demo will introduce a package tSQLt, whcih can be used to unit test tsqlt code [1]. All the code used in the 
-examples is accessible from this [github repository].
+examples is accessible from this [github repository](https://github.com/ryankarlos/tsqlt_demo).
 
 First we will restore the Adventure Works sample database. This database is based on  Adventure Works Cycles, the fictitious multinational manufacturing company created by Microsoft in 2010 [2]. 
 The company manufactures and sells metal and composite bicycles to North American, European and Asian commercial markets. 
 
 You can download the database backups  [here](https://docs.microsoft.com/en-us/sql/samples/adventureworks-install-configure?view=sql-server-ver16&tabs=ssms) or
-from the [db_backup] folder in the repository.
+from the [db_backup](https://github.com/ryankarlos/tsqlt_demo/tree/master/db_backup) folder in the repository.
 In this demo, we will use the 'AdventureWorksLT2019.bak' file corresponding to the lightweight and pared down version of the OLTP sample.
 Unzip and move the content to a location where you would like to store all the backups . On Windows, you will need to install 
 SQL Server Developer 2019 and SQL Server Management Studio by following this [link](https://www.sqlservertutorial.net/install-sql-server/) or this [blog](https://www.mssqltips.com/sqlservertip/6608/install-sql-server-2019-standard-edition/). 
@@ -55,7 +55,7 @@ In tSQLt, a test case is a stored procedure that’s part of a test class and us
 We can develop and test stored procedures and functions in a database.
 
 We have a number of stored procedures in [stored_procedures.sql] and the associated tests for each of the stored procedures stored in the 
-[tsqlt] folder.
+[tsqlt](https://github.com/ryankarlos/tsqlt_demo/tree/master/sql/tsqlt) folder.
 Open the [stored_procedures.sql] script in SSMS console and execute it. We should see all the procedures created in the object explorer 
 with the SalesLT schema.
 
@@ -119,7 +119,7 @@ Finally, we use the tSQLt AssertEqualsTable stored procedure to compare the data
 Open the [sp_func.sql] script in SSMS console and execute it. These create a couple of stored procedures and one function 
 We have a test for each of these procedures and function in [tsqlt] folder. 
 
-Before running the test script  [test_company_address.sql] , you need to create a test class
+Before running the test script  [test_company_address.sql](https://github.com/ryankarlos/tsqlt_demo/blob/master/sql/tsqlt/test_company_address.sql) , you need to create a test class
 where the test case will be located. In tSQLt, all tests are collected under a single class. A class is a schema. 
 A test class is a schema configured with an extended property that tells tSQLt that it is a test class.
 To create a new class, use the NewTestClass procedure. For example, 
@@ -132,13 +132,13 @@ This creates a new schema for our test cases, so we can organise and execute tes
 We need to create this test class nly once and before running all the scripts for creating our test procedures.
 We can add one or more test cases to the test class, which is the case in all the test scripts created in  [tsqlt] folder.
 
-Now we can run the [test_company_address.sql] script described above and create the test stored procedure. 
+Now we can run the [test_company_address.sql](https://github.com/ryankarlos/tsqlt_demo/blob/master/sql/tsqlt/test_company_address.sql) script described above and create the test stored procedure. 
 Now we can run the test case using `EXEC tSQLt.Run testSalesLT`. When we run the test case, it should evaluate 
 to true and return the following results:
 
 <img src="screenshots/tsqlt/cust_orders_test_result.png">
 
-Now run each of the other test scripts, [test_company_address.sql] and [test_customer_orders.sql]. If we run
+Now run each of the other test scripts, [test_company_address.sql](https://github.com/ryankarlos/tsqlt_demo/blob/master/sql/tsqlt/test_company_address.sql) and [test_customer_orders.sql](https://github.com/ryankarlos/tsqlt_demo/blob/master/sql/tsqlt/test_customer_orders.sql). If we run
 `EXEC tSQLt.Run testSalesLT` after this, we should now see all the test cases run 
 
 <img src="screenshots/tsqlt/run_all_tests_in_same_class.png">
@@ -146,7 +146,7 @@ Now run each of the other test scripts, [test_company_address.sql] and [test_cus
 ### Debugging and test errors
 
 In case, we do make a mistake when creating our test, and the tables are not equal, tsqlt will throw an assertion 
-error . For example, in [test_freights_per_customer.sql], lets assume we created an expected table as below, with the first row 
+error . For example, in [test_freights_per_customer.sql](https://github.com/ryankarlos/tsqlt_demo/blob/master/sql/tsqlt/test_freights_per_customer.sql), lets assume we created an expected table as below, with the first row 
 dropped and the second row modified with different values. 
 
 ```SQL
@@ -175,7 +175,7 @@ This will allow us to test the behavior of the stored procedure in isolation fro
 If we require to isolate SQL unit test from tables, Faketable will be a good choice so that SQL unit test will 
 be more robust.
 
-As an example, the logic in the [views.sql] script creates a view of the products description and pricing from 
+As an example, the logic in the [views.sql](https://github.com/ryankarlos/tsqlt_demo/blob/master/sql/views.sql) script creates a view of the products description and pricing from 
 four tables  'Product', 'ProductModelProductDescription','ProductModel' and ProductDescription'. We want to 
 only test the logic that the resulting view contains the data we expect, which can be achieved by inserting our 
 own dummy data into each of the tables. The source tables may contain a lot of data, which would make it difficult to 
@@ -258,7 +258,7 @@ GO
 
 ```
 
-In the next section we will look at spy procedures using the test cases defined in [test_email_for_expired_items.sql]
+In the next section we will look at spy procedures using the test cases defined in [test_email_for_expired_items.sql](https://github.com/ryankarlos/tsqlt_demo/blob/master/sql/tsqlt/test_email_for_expired_items.sql)
 
 ###  Spy procedure
 
@@ -282,7 +282,7 @@ GO
 
 ```
 
-The script [send_email_for_old_items_advertised.sql] contains three stored procedures. `[SalesLT].ComputeCurrentYear`
+The script [send_email_for_old_items_advertised.sql](https://github.com/ryankarlos/tsqlt_demo/blob/master/sql/send_email_for_old_items_advertised.sql) contains three stored procedures. `[SalesLT].ComputeCurrentYear`
 calculates the current year from the current datetime. `[SalesLT].SendEmailIfItemStillBeingAdvertised` calls this procedure to
 return the current year. It then uses this to check the time since the items in products table were on sale and if they 
 are older than the expiry date @MaxExpiry parameter which defaults to 3. If this is true, then it will select the items
