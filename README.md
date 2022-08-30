@@ -227,7 +227,22 @@ We can then use  the `tSQLt.AssertEqualsTable` as used previously, to compare th
 <img src="screenshots/tsqlt/view_successful_run.png">
 
 
-###  Setup and teardown procedure
+###  Spy procedure
+
+A Setup procedure can be called before executing each tets case by creating a procedure `[SalesLT].[Setup]`.
+
+
+Lets assume we want to send an email alert after to the user based on an event in our procedure .e.g it computes that 
+an item is still showing up as on sale if it is supposed to be discontinued (after a certain period of time).
+
+
+The very first step is to unblock the Stored Procedure sp_send_dbmail used for sending emails using SQL Server 
+otherwise when you execute the Stored Procedure you will get an error:
+
+
+Now lets assume we have a person Joe Bloggs higher up in management in the company who the email needs to be sent to.
+We do not want to be pinging him everytime we test this procedure the 
+
 
 In all the examples, we have used a single test class `testSalesLT` and executed all the tests in the class by 
 passing the class name as a parameter to `tSQLt.Run` procedure .e.g `EXEC tSQLt.Run testSalesLT`. However, if we did 
