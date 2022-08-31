@@ -121,7 +121,7 @@ Finally, we use the tSQLt AssertEqualsTable stored procedure to compare the data
   EXEC tSQLt.AssertEqualsTable expected, actual;
 ```
 
-Open the [sp_func.sql] script in SSMS console and execute it. These create a couple of stored procedures and one function 
+Open the [sp_func.sql](https://github.com/ryankarlos/tsqlt_demo/blob/master/sql/sp_and_func.sql) script in SSMS console and execute it. These create a couple of stored procedures and one function 
 We have a test for each of these procedures and function in [tsqlt] folder. 
 
 Before running the test script  [test_company_address.sql](https://github.com/ryankarlos/tsqlt_demo/blob/master/sql/tsqlt/test_company_address.sql) , you need to create a test class where the test case will be located. In tSQLt, all tests are collected under a single class. A class is a schema. 
