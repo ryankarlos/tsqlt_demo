@@ -18,10 +18,9 @@ and backup the AdventureWorks database .bak file [3]. The only change is that yo
 using the lightweight version.
 
 The rest of the demo, will assume you are using Management Studio which should be easy to replicate on Azure Data Studio. 
-You should have a backup folder already present after installing 
-Microsoft SQL server 2019.(`C:\Program Files\Microsoft SQL Server\MSSQL15.MSSQLSERVER\MSSQL\Backup`). Right click on Databases in the object explorer
--> Restore Database and add path to .bak file as in screenshot below. Click OK to restore the database.
-Refresh the Database and you should see the `AdventureWorksLT2019` database in the object explorer.
+You should have a backup folder already present in path `C:\Program Files\Microsoft SQL Server\MSSQL15.MSSQLSERVER\MSSQL\Backup` after installing Microsoft SQL server 2019. 
+
+Right click on 'Databases' in the object explorer, select 'Restore Database'[ and add path to .bak file as in screenshot below. Click OK to restore the database. Refresh the 'Database' and you should see the `AdventureWorksLT2019` database in the object explorer.
 
 <img src="screenshots/tsqlt/restore_db.png">
 
@@ -54,21 +53,16 @@ instructions on how to do this, check out this [article](https://www.mssqltips.c
 The tables in the database, which contain information about product details, customers, and sales orders, are related 
 through primary and foreign keys, as shown here
 
-
 <img src="screenshots/tsqlt/database-diagram-tool.png">
 
 
 In tSQLt, a test case is a stored procedure that’s part of a test class and uses tSQLt elements to perform the testing. 
 We can develop and test stored procedures and functions in a database.
 
-We have a number of stored procedures in [stored_procedures.sql] and the associated tests for each of the stored procedures stored in the 
-[tsqlt](https://github.com/ryankarlos/tsqlt_demo/tree/master/sql/tsqlt) folder.
-Open the [stored_procedures.sql] script in SSMS console and execute it. We should see all the procedures created in the object explorer 
-with the SalesLT schema.
-
+We have a number of stored procedures and functions in this [script](https://github.com/ryankarlos/tsqlt_demo/blob/master/sql/sp_and_func.sql) and the associated tests for each of the stored procedures stored in the [tsqlt](https://github.com/ryankarlos/tsqlt_demo/tree/master/sql/tsqlt) folder.
+Open the [sp_and_func.sql](https://github.com/ryankarlos/tsqlt_demo/blob/master/sql/sp_and_func.sql) script in SSMS console and execute it. We should see all the procedures created in the object explorer with the SalesLT schema.
 
 <img src="screenshots/tsqlt/sp_saleslt.png">
-
 
 ## Testing 
 
@@ -130,8 +124,7 @@ Finally, we use the tSQLt AssertEqualsTable stored procedure to compare the data
 Open the [sp_func.sql] script in SSMS console and execute it. These create a couple of stored procedures and one function 
 We have a test for each of these procedures and function in [tsqlt] folder. 
 
-Before running the test script  [test_company_address.sql](https://github.com/ryankarlos/tsqlt_demo/blob/master/sql/tsqlt/test_company_address.sql) , you need to create a test class
-where the test case will be located. In tSQLt, all tests are collected under a single class. A class is a schema. 
+Before running the test script  [test_company_address.sql](https://github.com/ryankarlos/tsqlt_demo/blob/master/sql/tsqlt/test_company_address.sql) , you need to create a test class where the test case will be located. In tSQLt, all tests are collected under a single class. A class is a schema. 
 A test class is a schema configured with an extended property that tells tSQLt that it is a test class.
 To create a new class, use the NewTestClass procedure. For example, 
 
@@ -204,14 +197,13 @@ violation error.
 Otherwise inserting rows on faked tables will throw an error  ``Object ' ' cannot be renamed because the object participates 
 in enforced dependencies.``. 
 
-Now run the [views.sql] script in SSMS to create a view of the products description and pricing. Check that the view 
-is created and query it
+Now run the [views.sql](https://github.com/ryankarlos/tsqlt_demo/blob/master/sql/views.sql) script in SSMS to create a view of the products description and pricing. Check that the view is created and query it
 
 
 <img src="screenshots/tsqlt/create_view.png">
 
 
-Then run the test tsqlt script[test_vw_products.sql] for testing the view. The first part of the script, executes the `FakeTable` tsqlt stored procedure
+Then run [test_vw_products.sql](https://github.com/ryankarlos/tsqlt_demo/blob/master/sql/tsqlt/test_vw_products.sql) for testing the view. The first part of the script, executes the `FakeTable` tsqlt stored procedure
 on each of the source tables the view depends on. 
 
 ```sql
@@ -245,7 +237,7 @@ We can then use  the `tSQLt.AssertEqualsTable` as used previously, to compare th
 ### Setup Procedure 
 
 A Setup procedure can be called before executing each test case by creating a procedure `[SalesLT].[Setup]`.
-In [test_email_for_expired_items.sql], we have defined a setup procedure which will create a fake product table and
+In [test_email_for_expired_items.sql](https://github.com/ryankarlos/tsqlt_demo/blob/master/sql/tsqlt/test_email_for_expired_items.sql), we have defined a setup procedure which will create a fake product table and
 insert data to be used by all the tests in the class. We have defined a new test class `testExpiredProducts` 
 for this setup procedure as we only want it to execute for a specific group of tests and not the entire test suite.
 tsqlt will always check if a stored procedure named SetUp on the test class is defined and if so, it is executed before the test 
